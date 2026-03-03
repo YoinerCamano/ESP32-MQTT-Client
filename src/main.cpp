@@ -66,11 +66,11 @@ extern "C" void app_main(void)
   while (true) {
     bool status_sensor_ADS1115 = read_ads1115();
 
-    if (status_sensor_ADS1115 == ESP_OK) {
+    if (status_sensor_ADS1115) {
      ESP_LOGI(TAG, "OUT: %.3f mV | IN: %.4f", output_mv, input_volt);
 
     } else {
-        ESP_LOGE(TAG, "ADS error: %s", esp_err_to_name(status_sensor_ADS1115));
+        ESP_LOGE(TAG, "ADS error: Verifique el sensor");
     }
 
     vTaskDelay(pdMS_TO_TICKS(500));
@@ -111,7 +111,7 @@ static void on_mqtt_connected(void* user)
     
   bool status_sensor_ADS1115 = read_ads1115();
 
-    if (status_sensor_ADS1115 == ESP_OK) {
+    if (status_sensor_ADS1115) {
 
         char msg2[120];
         std::snprintf(msg2, sizeof(msg2),
@@ -150,8 +150,14 @@ bool read_ads1115(void)
     ADS1115::PGA::FS_6_144V,   // Entrada grande
     ADS1115::SPS::SPS_128
   );
-  output_mv = output_mv * 1000.0f;
-  input_volt = input_volt * 3.7f;   // factor de conversión para tu divisor de voltaje
-
-  return status_sensor_ADS11156 == ESP_OK;
-}
+  
+if (status_sensor_ADS11156 == ESP_OK) {
+    output_mv = output_mv * 1000.0f;
+    input_volt = input_volt * 3.7f; 
+    return true;
+  }
+else {
+    ESP_LOGE(TAG, "Error leyendo ADS1115: %s", esp_err_to_name(status_sensor_ADS11156));
+  return false;
+};
+};
