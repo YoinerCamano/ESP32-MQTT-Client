@@ -54,5 +54,5 @@ private:
   esp_err_t read_u16(uint8_t reg, uint16_t& value);
 
   static float fsr_from_pga(PGA pga);
-  static uint32_t wait_ms_from_sps(SPS sps);
+  static uint16_t wait_ms_from_sps(SPS sps);
 };

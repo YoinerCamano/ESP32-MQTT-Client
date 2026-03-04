@@ -45,7 +45,7 @@ float ADS1115::fsr_from_pga(PGA pga)
   }
 }
 
-uint32_t ADS1115::wait_ms_from_sps(SPS sps)
+uint16_t ADS1115::wait_ms_from_sps(SPS sps)
 {
   // Conversión en single-shot tarda ~1/SPS. Aquí damos margen.
   // 128 SPS => ~7.8ms, 860 SPS => ~1.2ms
