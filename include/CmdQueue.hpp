@@ -7,8 +7,7 @@ extern "C" {
 #include "freertos/queue.h"
 }
 
-// Ajusta tamaño si tu JSON crece
-static constexpr size_t CMD_PAYLOAD_MAX = 64;
+static constexpr size_t CMD_PAYLOAD_MAX = 512;
 
 typedef struct {
   char payload[CMD_PAYLOAD_MAX];
