@@ -135,7 +135,7 @@ static void pub_diag_finished(CmdContext* ctx, const Runtime& rt, const char* re
 }
 
 // ================== ADS read (una muestra) ==================
-static bool read_ads_one(CmdContext* ctx, int& out_cell_uV, int& out_amp_mV)
+static bool read_ads_one(CmdContext* ctx, int& out_load_cell_signal, int& out_load_cell_excitation)
 {
     if (!ctx || !ctx->ads) return false;
 
@@ -153,15 +153,15 @@ static bool read_ads_one(CmdContext* ctx, int& out_cell_uV, int& out_amp_mV)
 
     // output_mv viene en V? en tu uso anterior lo multiplicas por 1000 para mV,
     // como la salida esta en VOLTS.
-    // Mantengo tu convención: cell_uv = (output_mv[V] * 1e6)
-    float cell_uV_f = output_mv * 1000000.0f;
+    // Mantengo tu convención: load_cell_signal = (output_mv[V] * 1e6)
+    float load_cell_signal_f = output_mv * 1000000.0f;
 
     // input_volt lo estabas multiplicando por 3.7 para obtener Vin real (en V)
     float amp_v_f = input_volt * AMP_DIV_FACTOR;
-    float amp_mV_f = amp_v_f * 1000.0f;
+    float load_cell_excitation_f = amp_v_f * 1000.0f;
 
-    out_cell_uV = (int)(cell_uV_f >= 0 ? (cell_uV_f + 0.5f) : (cell_uV_f - 0.5f));
-    out_amp_mV  = (int)(amp_mV_f  >= 0 ? (amp_mV_f  + 0.5f) : (amp_mV_f  - 0.5f));
+    out_load_cell_signal = (int)(load_cell_signal_f >= 0 ? (load_cell_signal_f + 0.5f) : (load_cell_signal_f - 0.5f));
+    out_load_cell_excitation  = (int)(load_cell_excitation_f  >= 0 ? (load_cell_excitation_f  + 0.5f) : (load_cell_excitation_f  - 0.5f));
 
     return true;
 }
@@ -343,8 +343,8 @@ static void pub_step_raw_chunks(
     uint8_t dac,
     int sample_interval_ms,
     uint32_t t0_ms,
-    const int* amp_mV,
-    const int* cell_uV,
+    const int* load_cell_excitation,
+    const int* load_cell_signal,
     int n_total
 )
 {
@@ -365,22 +365,22 @@ static void pub_step_raw_chunks(
             "\"sample_interval_ms\":%d,"
             "\"t0_ms\":%u,"
             "\"chunk\":%d,\"chunks\":%d,\"n\":%d,"
-            "\"amp_mv\":[",
+            "\"cell_exc[mV]\":[",
             seq, step_idx + 1, v_set, dac,
             sample_interval_ms,
             (unsigned)t0_ms,
-            c, chunks, n);
+            (c+1), chunks, n);
 
         for (int i = start; i < end; i++) {
             w += std::snprintf(out + w, sizeof(out) - w,
-                "%d%s", amp_mV[i], (i + 1 < end) ? "," : "");
+                "%d%s", load_cell_excitation[i], (i + 1 < end) ? "," : "");
         }
 
-        w += std::snprintf(out + w, sizeof(out) - w, "],\"cell_uv\":[");
+        w += std::snprintf(out + w, sizeof(out) - w, "],\"cell_sig[uV]\":[");
 
         for (int i = start; i < end; i++) {
             w += std::snprintf(out + w, sizeof(out) - w,
-                "%d%s", cell_uV[i], (i + 1 < end) ? "," : "");
+                "%d%s", load_cell_signal[i], (i + 1 < end) ? "," : "");
         }
 
         w += std::snprintf(out + w, sizeof(out) - w,
@@ -467,8 +467,8 @@ static void cmd_task(void* arg)
                 }
 
                 // muestreo RAW
-                static int amp_mV[MAX_SAMPLES_PER_STEP];
-                static int cell_uV[MAX_SAMPLES_PER_STEP];
+                static int load_cell_excitation[MAX_SAMPLES_PER_STEP];
+                static int load_cell_signal[MAX_SAMPLES_PER_STEP];
                 int n_ok = 0;
 
                 uint32_t t0_ms = xTaskGetTickCount() * portTICK_PERIOD_MS;
@@ -479,8 +479,8 @@ static void cmd_task(void* arg)
 
                     int cell = 0, amp = 0;
                     if (read_ads_one(ctx, cell, amp)) {
-                        amp_mV[n_ok] = amp;
-                        cell_uV[n_ok] = cell;
+                        load_cell_excitation[n_ok] = amp;
+                        load_cell_signal[n_ok] = cell;
                         n_ok++;
                     }
 
@@ -500,7 +500,7 @@ static void cmd_task(void* arg)
                     v_applied, dac,
                     rt.cfg.sample_interval_ms,
                     t0_ms,
-                    amp_mV, cell_uV, n_ok
+                    load_cell_excitation, load_cell_signal, n_ok
                 );
             }
 
