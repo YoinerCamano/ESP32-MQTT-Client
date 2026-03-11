@@ -114,8 +114,8 @@ static void i2c_init()
 {
     i2c_config_t conf{};
     conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = GPIO_NUM_22;
-    conf.scl_io_num = GPIO_NUM_21;
+    conf.sda_io_num = GPIO_NUM_21;
+    conf.scl_io_num = GPIO_NUM_22;
     conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = 400000;
