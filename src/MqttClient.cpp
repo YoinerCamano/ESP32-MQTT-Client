@@ -7,7 +7,14 @@ extern "C" {
 
 static const char* TAG = "MQTT";
 
-static inline void safe_copy(char* dst, size_t dst_sz, const char* src) {
+static inline void safe_copy(char* dst, size_t dst_sz, const char* src) 
+/*
+ * @brief Safely copies a string to a destination buffer.
+ * @param dst Destination buffer.
+ * @param dst_sz Size of the destination buffer.
+ * @param src Source string.
+ */
+{
   if (!dst || dst_sz == 0) return;
   if (!src) { dst[0] = '\0'; return; }
   std::strncpy(dst, src, dst_sz - 1);

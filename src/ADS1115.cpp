@@ -6,9 +6,27 @@ extern "C" {
 }
 
 ADS1115::ADS1115(i2c_port_t port, uint8_t addr)
+/**
+ * @brief Driver para el ADC ADS1115 usando I2C.
+ *
+ * Permite leer pares diferenciales del ADC ADS1115 y obtener
+ * valores convertidos a voltaje.
+ *
+ * Características:
+ * - Conversión diferencial
+ * - Configuración de rango (PGA)
+ * - Selección de velocidad de muestreo (SPS)
+ * - Lectura simultánea de dos pares de entrada
+ */
 : port_(port), addr_(addr) {}
 
 esp_err_t ADS1115::write_u16(uint8_t reg, uint16_t value)
+/*
+ * @brief Escribe un valor de 16 bits en un registro del ADS1115.
+ * @param reg Registro al que se desea escribir.
+ * @param value Valor de 16 bits a escribir.
+ * @return ESP_OK si la operación fue exitosa, de lo contrario un código de error.
+ */
 {
   uint8_t data[3] = {
     reg,
@@ -19,6 +37,13 @@ esp_err_t ADS1115::write_u16(uint8_t reg, uint16_t value)
 }
 
 esp_err_t ADS1115::read_u16(uint8_t reg, uint16_t& value)
+/*
+ * @brief Lee un valor de 16 bits de un registro del ADS1115.
+ * @param reg Registro del que se desea leer.
+ * @param value Referencia donde se almacenará el valor leído.
+ * @return ESP_OK si la operación fue exitosa, de lo contrario un código de error.
+
+ */
 {
   uint8_t out = reg;
   uint8_t in[2] = {0, 0};
@@ -33,6 +58,11 @@ esp_err_t ADS1115::read_u16(uint8_t reg, uint16_t& value)
 }
 
 float ADS1115::fsr_from_pga(PGA pga)
+/*
+ * @brief Obtiene el rango completo de voltaje (FSR) basado en la configuración de ganancia (PGA).
+ * @param pga Configuración de ganancia.
+ * @return Rango completo de voltaje en voltios.
+ */
 {
   switch (pga) {
     case PGA::FS_6_144V: return 6.144f;
@@ -57,6 +87,14 @@ uint16_t ADS1115::wait_ms_from_sps(SPS sps)
 }
 
 esp_err_t ADS1115::read_diff(float& volts, DiffPair pair, PGA pga, SPS sps)
+/*
+ * @brief Lee un valor diferencial del ADS1115 y lo convierte a voltaje.
+ * @param volts Referencia donde se almacenará el voltaje leído.
+ * @param pair Par diferencial a leer.
+ * @param pga Configuración de ganancia.
+ * @param sps Velocidad de muestreo.
+ * @return ESP_OK si la operación fue exitosa, de lo contrario un código de error.
+ */
 {
   int16_t raw = 0;
   return read_diff(raw, volts, pair, pga, sps);
@@ -69,7 +107,7 @@ esp_err_t ADS1115::read_diff(int16_t& raw, float& volts, DiffPair pair, PGA pga,
   uint8_t mux = static_cast<uint8_t>(pair);
   if (mux > 3) return ESP_ERR_INVALID_ARG;
 
-  // Config igual a tu MicroPython:
+  // Config igual que antes, pero con el MUX dinámico según el par seleccionado
   // OS=1 start (bit15)
   // MUX=mux (bits14..12)
   // PGA=pga (bits11..9)
@@ -107,6 +145,15 @@ esp_err_t ADS1115::read_two_pairs(float& v_a0_a1,
                                  PGA pga_a0_a1,
                                  PGA pga_a2_a3,
                                  SPS sps)
+/*
+ * @brief Lee ambos pares diferenciales del ADS1115 en una sola llamada.
+ * @param v_a0_a1 Voltaje leído del par A0-A1.
+ * @param v_a2_a3 Voltaje leído del par A2-A3.
+ * @param pga_a0_a1 Configuración de ganancia para el par A0-A1.
+ * @param pga_a2_a3 Configuración de ganancia para el par A2-A3.
+ * @param sps Velocidad de muestreo.
+ * @return ESP_OK si la operación fue exitosa, de lo contrario un código de error.
+ */
 {
     esp_err_t err = read_diff(v_a0_a1, DiffPair::A0_A1, pga_a0_a1, sps);
     if (err != ESP_OK) return err;
